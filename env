@@ -1,0 +1,7 @@
+#!/bin/bash
+# docker hub username
+USERNAME=arberg
+# image name
+IMAGE_NAME=duplicati-reencrypt
+# http://jemi.dk/ihc/#changelog
+VERSION=$(cat VERSION)

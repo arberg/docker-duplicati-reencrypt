@@ -1,0 +1,7 @@
+.disk*.md5
+.user.md5
+.cache.md5
+config/*
+!config/config-sample.txt
+*.url
+*.log

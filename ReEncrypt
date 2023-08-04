@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+. env
+DOCKER_NAME=$IMAGE_NAME
+IMAGE=$USERNAME/${IMAGE_NAME}:latest
+
+CURRENT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
+
+# config="config.txt"
+# if [[ "$1" == "-c" ]] ; then
+# 	config="$2"
+# 	shift
+# 	shift
+# fi
+
+# if ! -f "config/$config" ; then
+# 	echo "Error: Config file not found: 'config/$config'"
+# 	exit 1
+# fi
+
+set -ex
+docker run -it --rm --name $DOCKER_NAME -v $CURRENT_DIR/config:/app/config -v $CURRENT_DIR/host:/host/ -v $CURRENT_DIR/host:/host/ -v "/mnt/disks/tmp4tbssd/NonBackup/rclone/:/mnt/disks/tmp4tbssd/NonBackup/rclone/" $IMAGE python3 ReEncrypt.py $*
