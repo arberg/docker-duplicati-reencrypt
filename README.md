@@ -8,7 +8,10 @@ Usage:
 
 3) Prepare a config file in /config, see example in config/config-sample.txt. 
 
-3) Run './run.sh' which runs 'ReEncrypt.sh -c config/config.txt.'
+3) Run './ReEncrypt -c config/config.txt.'
+	or './ReEncrypt -h'
+	or './ReEncrypt -c config/config.txt --DELETE-ORIGINAL'
+		- but don't use --DELETE-ORIGINAL unless you have tested it works and can accept the risk of losing backups.
 
 4) Update your duplicati backup settings to the changed encryption settings. 
 
