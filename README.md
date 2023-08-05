@@ -6,9 +6,12 @@ Usage:
 
 1) Confirm that your Duplicati data is on disk in .zip or .zip.aes or .zip.gpg format..
 
-3) Prepare a config file in /config, see example in config/config-sample.txt. 
+2) Prepare a config file in /config, see example in config/config-sample.txt. 
+    
+    Note that hash-verification does NOT abort or print in an easy detectable way. To use it meaningfully pipe output to log-file and grep logfile 
+    	cat out.log | grep "exact:" | grep -v "exact: True"
 
-3) Run './ReEncrypt -c config/config.txt.'
+3) Run './ReEncrypt -c config/config.txt | tee -a out.log'
 	or './ReEncrypt -h'
 	or './ReEncrypt -c config/config.txt --DELETE-ORIGINAL'
 		- but don't use --DELETE-ORIGINAL unless you have tested it works and can accept the risk of losing backups.
