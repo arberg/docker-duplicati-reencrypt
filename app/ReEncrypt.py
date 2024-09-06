@@ -34,6 +34,9 @@ import multiprocessing
 origDataPath=""
 newDataPath=""
 deleteOriginalBackup=False
+# For SSD storage using 2*CPU might be reasonable, for HDD storage, its probably not. Tests on slow CPU hardware with HDD indicate 2x are optimal (on that environment).
+# maxThreads=multiprocessing.cpu_count() * 2
+maxThreads=2
 
 def mainReEncrypt(options):
     # locate dlist
@@ -53,8 +56,7 @@ def mainReEncrypt(options):
     # locate dlist
     dindex = [name for name in os.listdir(origDataPath) if name.endswith(".dindex.%s" %(options['orig']['extension']))]
 
-    num_cores = multiprocessing.cpu_count()
-    Parallel(n_jobs=num_cores*2)(delayed(handleIndex)(options, dindex_enc) for dindex_enc in dindex)
+    Parallel(n_jobs=maxThreads)(delayed(handleIndex)(options, dindex_enc) for dindex_enc in dindex)
 
 def targetExists(options, dfile):
     return os.path.exists(os.path.join(newDataPath, dfile))
@@ -121,6 +123,7 @@ def handleIndex(options, dindex_enc):
 def deleteOrigFile(file):
     # os.rename(file, file+".deleted") # Just renames file, simulating delete
     os.remove(file)
+    print('deleting original %s' % (file))
 
 def change_ext(filename, ext_old, ext_new):
     return filename.replace(ext_old, ext_new)
@@ -205,14 +208,18 @@ def computeHash(path):
     return base64.b64encode(hasher.digest())
 
 def printUsage():
-    print('ReEncrypt.py -c <configfile> [--DELETE-ORIGINAL]')
+    print('ReEncrypt.py -c <configfile> [--DELETE-ORIGINAL] [-t MAX_NO_THREADS]')
+    print()
+    print('Note that --DELETE-ORIGINAL requires config with root level property: "allow_delete": true')
+    print('Both have to be enabled in order to perform delete of original files during reencryption')
 
 def main(argv):
     configfile = ''
     deleteOption='DELETE-ORIGINAL'
     try:
-        opts, args = getopt.getopt(argv,"hc:", [deleteOption])
+        opts, args = getopt.getopt(argv,"hc:t:", [deleteOption])
     except getopt.GetoptError:
+        print("ERROR: Bad arguments")
         printUsage()
         sys.exit(2)
     for opt, arg in opts:
@@ -221,11 +228,10 @@ def main(argv):
             sys.exit(2)
         elif opt == '-c':
             configfile = arg
+        elif opt == '-t':
+            global maxThreads
+            maxThreads = int(arg)
         elif opt == "--"+deleteOption:
-            print("##############################################################################################")
-            print("### WARNING: The original backup will be deleted. PLEASE DO NOT do this unless you need to ###")
-            print("### and have tested your config script works (and are willing to risk losing your backups) ###")
-            print("##############################################################################################")
             global deleteOriginalBackup
             deleteOriginalBackup = True # Sleep below after parsing config to give user a brief time to abort
         else:
@@ -247,17 +253,37 @@ def main(argv):
             print("ERROR: new and orig path are identical")
             sys.exit(2)
         if not os.path.exists(origDataPath):
-            print("Original data path not found: "+origDataPath)
+            print("ERROR: Original data path not found: "+origDataPath)
             sys.exit(2)
         # Create target dir
         if not os.path.exists(newDataPath):
             os.mkdir(newDataPath)
         if not os.path.exists(newDataPath):
-            print("New data path not found (and could not create): "+newDataPath)
+            print("ERROR: New data path not found (and could not create): "+newDataPath)
             sys.exit(2)
+
+        allowDelete=options['allow_delete']
         if deleteOriginalBackup:
+            if not allowDelete:
+                print('ERROR: --DELETE-ORIGINAL specified but missing config with: "allow_delete": true')
+                print()
+                printUsage
+                sys.exit(2)
+
+            print("##############################################################################################")
+            print("### WARNING: The original backup will be deleted. PLEASE DO NOT do this unless you need to ###")
+            print("### and have tested your config script works (and are willing to risk losing your backups) ###")
+            print("### -> In particular test that target storage is where you expect by running without       ###")
+            print("### -> --DELETE_BACKUP first and breaking with Ctrl-C                                      ###")
+            print("### -> (inMemory or inner docker container storage would be bad)                           ###")
+            print("##############################################################################################")
+            print("###   Remember to protect process from being killed if terminal is lost (such as screen)   ###")
+            print("##############################################################################################")
             import time
             time.sleep(5)
+        else:
+            if (allowDelete):
+                print('--DELETE-ORIGINAL not supplied, so original files will NOT be deleted during reencryption')
 
         mainReEncrypt(options)
     print('Complete.')

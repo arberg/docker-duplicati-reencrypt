@@ -18,4 +18,4 @@ CURRENT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 # fi
 
 set -ex
-docker run -it --rm --name $DOCKER_NAME -v $CURRENT_DIR/config:/app/config -v $CURRENT_DIR/host:/host/ -v $CURRENT_DIR/host:/host/ -v "/mnt/disks/tmp4tbssd/NonBackup/rclone/:/mnt/disks/tmp4tbssd/NonBackup/rclone/" $IMAGE python3 ReEncrypt.py $*
+docker run -it --rm --name $DOCKER_NAME -v $CURRENT_DIR/config:/app/config -v $CURRENT_DIR/host:/host/ -v $CURRENT_DIR/host:/host/ -v "/mnt/:/mnt/" $IMAGE python3 ReEncrypt.py $*
